@@ -21,7 +21,7 @@ library(ggplot2)
 Now, upload the file "Class_Motivation.csv" from the Assignment 3 Repository as a data frame called "K1""
 ```{r}
 
-K1 <- read.table(...)
+K1 <- read.csv("Class_Motivation.csv")
 
 ```
 
@@ -39,7 +39,9 @@ K2 <- dplyr::select(K1, 2:6)
 
 It is important to think about the meaning of missing values when clustering. We could treat them as having meaning or we could remove those people who have them. Neither option is ideal. What problems do you foresee if we recode or remove these values? Write your answers below:
 
+- If you treat missing values as having meaning, this likely means you will include them in any analysis you do on your dataset This is troublesome because those missing values are treated as having meaning though that meaning may not be appropriately defined or categorized.
 
+- If you remove missing values, you exclude this data from your analysis. This is troublesome because could have been signficant in your analysis and conclusions
 
 We will remove people with missing values for this assignment, but keep in mind the issues that you have identified.
 
@@ -81,11 +83,11 @@ fit <- kmeans(K3, 2)
 
 fit$cluster
 
-#We can also attach these clusters to te original dataframe by using the "data.frame" command to create a new data frame called K4.
+#We can also attach these clusters to the original dataframe by using the "data.frame" command to create a new data frame called K4.
 
 K4 <- data.frame(K3, fit$cluster)
 
-#Have a look at the K4 dataframe. Lets change the names of the variables to make it more convenient with the names() command.
+#Have a look at the K4 dataframe. Let's change the names of the variables to make it more convenient with the names() command.
 
 names(K4) <- c("1", "2", "3", "4", "5", "cluster") #c() stands for concatonate and it creates a vector of anything, in this case a vector of names.
 
@@ -94,14 +96,14 @@ names(K4) <- c("1", "2", "3", "4", "5", "cluster") #c() stands for concatonate a
 
 Now we need to visualize the clusters we have created. To do so we want to play with the structure of our data. What would be most useful would be if we could visualize average motivation by cluster, by week. To do this we will need to convert our data from wide to long format. Remember your old friends tidyr and dplyr!
 
-First lets use tidyr to convert from wide to long format.
+First let's use tidyr to convert from wide to long format.
 ```{r}
 
 K5 <- tidyr::gather(K4, "week", "motivation", 1:5)
 
 ```
 
-Now lets use dplyr to average our motivation values by week and by cluster.
+Now let's use dplyr to average our motivation values by week and by cluster.
 
 ```{r}
 
@@ -145,6 +147,8 @@ ggplot(K6, aes(week, avg, colour = cluster)) + geom_line() + xlab("Week") + ylab
 
 What patterns do you see in the plot?
 
+I see that each cluster line has opposite changing slopes at weeks 2 and 3. For example, cluster 1 starts high, decreases, increases, than drastically decreases by week 5, while cluster 2 starts low, increases, decreases, and substantially increases by week 5.
+
 It would be useful to determine how many people are in each cluster. We can do this easily with dplyr.
 
 ```{r}
@@ -153,6 +157,40 @@ K7 <- dplyr::count(K4, cluster)
 
 Look at the number of people in each cluster, now repeat this process for 3 rather than 2 clusters. Which cluster grouping do you think is more informative? Write your answer below:
 
+```{r}
+
+fit <- kmeans(K3, 3) 
+
+fit$cluster
+K8 <- data.frame(K3, fit$cluster)
+names(K8) <- c("1", "2", "3", "4", "5", "cluster")
+
+```
+
+```{r}
+K10 <- tidyr::gather(K8, "week", "motivation", 1:5)
+K11 <- K10 %>% group_by(week, cluster)
+K11 <- summarise(K11, avg = mean(motivation))
+K11$week <- as.numeric(K11$week)
+K11$cluster <- as.factor(K11$cluster)
+```
+
+```{r}
+
+ggplot(K11, aes(week, avg, colour = cluster)) + geom_line() + xlab("Week") + ylab("Average Motivation")
+
+```
+
+```{r}
+
+K9 <- dplyr::count(K8, cluster)
+print(K9)
+
+```
+
+Clustering by 2 is more informative for this data set. When you cluster by 3, there is a cluster where n=1. Maybe that n=1 is an outlier, but I think it is more informative as to what that n=1 is if we categorize it against other data in the dataset.
+
+In the plot, cluster 1 where n=1 has a greater average motivation summed over the five weeks. It also experiences the greatest negative slope in the graph between weeks 4 and 5.
 
 Once you have done this, save both of your plots to the Assignment 5 file. Create a Zotero item to index your new computer program (Assignment 5.rmd) in Zotero. Then commit your assignment, push it to your Github account and then Pull request your version to the original assignment version so I can see it.
 

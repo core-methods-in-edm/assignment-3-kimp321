@@ -1,0 +1,123 @@
+---
+title: "K-Means Clustering Algorithm Practice"
+output: html_notebook
+---
+
+## Part 1
+
+Create two groups of clusters, the answers to the questions and regions where people grew up. 
+
+```{r}
+library(dplyr)
+library(tidyr)  
+library(ggplot2)
+```
+
+```{r}
+df <- read.csv("HUDK4050_2017_Cluster_Survey.csv")
+```
+
+```{r}
+df_answers <- select(df, -first, -last, -city.grew, -state.grew, -country.grew)
+```
+
+```{r}
+df_answers$cat <- as.integer(df_answers$cat)
+df_answers$gif.jiff <- as.integer(df_answers$gif.jiff)
+```
+
+```{r}
+fit <- kmeans(df_answers, 2)
+df_cluster2 <- data.frame(df_answers, fit$cluster)
+fit <- kmeans(df_answers, 3)
+df_cluster3 <- data.frame(df_answers, fit$cluster)
+fit <- kmeans(df_answers, 4)
+df_cluster4 <- data.frame(df_answers, fit$cluster)
+fit <- kmeans(df_answers, 5)
+df_cluster5 <- data.frame(df_answers, fit$cluster)
+fit <- kmeans(df_answers, 6)
+df_cluster6 <- data.frame(df_answers, fit$cluster)
+fit <- kmeans(df_answers, 7)
+df_cluster7 <- data.frame(df_answers, fit$cluster)
+fit <- kmeans(df_answers, 8)
+df_cluster8 <- data.frame(df_answers, fit$cluster)
+fit <- kmeans(df_answers, 9)
+df_cluster9 <- data.frame(df_answers, fit$cluster)
+fit <- kmeans(df_answers, 10)
+df_cluster10 <- data.frame(df_answers, fit$cluster)
+```
+
+```{r}
+# Create an elbow plot to determine what centers for kmeans
+# https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set
+y <- c(var(df_cluster1$fit.cluster), var(df_cluster2$fit.cluster), var(df_cluster3$fit.cluster), var(df_cluster4$fit.cluster), var(df_cluster5$fit.cluster), var(df_cluster6$fit.cluster), var(df_cluster7$fit.cluster), var(df_cluster8$fit.cluster), var(df_cluster9$fit.cluster), var(df_cluster10$fit.cluster))
+x <- c(1:10)
+plot(x,y, type = "p", main = "Variance vs. K-Means Center", sub = "Elbow Method to Determine K-Means Center", xlab = "Clustering Size", ylab = "Variance")
+
+```
+
+```{r}
+df_region <- select(df, country.grew)
+count(df_region, country.grew)
+```
+```{r}
+df_region$country.grew[df_region$country.grew == 'USA'] <- 'United States'
+df_region$country.grew[df_region$country.grew == 'USA '] <- 'United States'
+count(df_region, country.grew)
+```
+
+```{r}
+plot <- select(df_cluster6, fit.cluster)
+plot <- bind_cols(plot, df_region)
+plot$fit.cluster <- as.numeric(plot$fit.cluster)
+plot$country.grew <- as.numeric(plot$country.grew)
+names(plot) <- c("clustered_answers", "region")
+plot <- arrange(plot, region)
+```
+
+
+##Part III
+
+Create a visualization that shows the overlap between the two groups of clusters you created in part II.
+
+visualize average totaled survey answers by region, by cluster
+
+```{r}
+print(plot)
+```
+
+```{r}
+ggplot(clustered_answers, aes(region, clustered_answers, colour = region)) + geom_count() + xlab("Region") + ylab("Survey Answer Clusters")
+```
+
+Summary of what I did:
+1. df_cluster6$fit.cluster clustered the survey answers into a k-means center of 6. I chose 6 as the result of the elbow method.
+2. manually categorized the countries as regions.
+Region Key:
+-- China	= 1 (n=16)
+-- Indonesia	= 2 (n=1)			
+-- Taiwan = 3 (n=1)			
+-- United States = 4 (n=7)	
+3. bind df_cluster6$fit.cluster and as.numeric(regions)
+4. ggplot + geom_count() gave me a graph where:
+x-axis: region
+y-axis: survey answers
+points: are small or big depending on n=
+
+To interpret:
+If you look at the data by region, regions 1 (China) and 4 (US) have the most populated data.
+If you compare regions 1 and 4, region 1 has two distinct clusters (1 and 4 on the y axis) and region 4 has two distinct clusters (1 and 2).
+Regions 1 and 4 share cluster 1 as one of their two distinct clusters.
+All regions share cluster 1 as a cluster.
+Regions 1 and 4 have two overlapping clusters (1 and 4) but do not overlap with clusters 3, 4, 5 and 6.
+Clusters 5 and 6 for region 4 have small n values.
+Clusters 2 and 3 for region 1 have small n values.
+
+Recommendation:
+I would recommend looking for patterns in the clustered survey answers determined by R for further interpretation as it might pertain to region differentiation.
+
+
+```{r}
+count(df_cluster6, fit.cluster)
+```
+
